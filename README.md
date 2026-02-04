@@ -13,7 +13,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 2. set up your Git SSH key so pushes don't require typing a password
 3. Download VScode, open the cloned folder
 4. Install docker (should be a desktop app)
-5. Install codex (using the terminal)
+5. Install codex CLI (using the terminal): https://developers.openai.com/codex/cli/
 6. run codex in terminal and sign in
 7. Type `codex` in terminal to make sure it is working
 8. run `build.sh` which build container like a VM with all your packages; every time packages are added have to rerun this
@@ -28,9 +28,9 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 ## Build On Computer Cluster
 Most shared compute clusters (like our argo server) do not allow the Docker daemon for security, so the supported container runtime is Apptainer.
 1. Install VScode on cluster: look at this for how to do that: https://github.com/pritykinlab/pritykinlab_onboarding
-2. Install codex on the cluster; copy ~/.codex/auth.json from local computer over instead of logging in from the server
+2. Install codex CLI on the cluster (https://developers.openai.com/codex/cli/); npm via conda then codex via npm; copy ~/.codex/auth.json from local computer over instead of logging in from the server
 3. On cluster git clone the repo
-4. Update `apptainer/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
+4. Update `apptai/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
 6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access.
 7. SSH to the server and `cd` into the repo that was cloned
