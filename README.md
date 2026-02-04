@@ -22,7 +22,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 11. To see how everything is working run `99_MNIST`; Open htmls using "Live Server" extension in VSCode; Right click on the html that you want to run and click "Open with Live Server"
 
 ### Notes:
-1. Docker can use lots of memory on computer either by keeping old images or build cache. To see how much memory this is taking up: `docker system df`. To prune all memory run: `docker system prune -af --volumes`; locally this could take 25 GB
+1. Docker can use lots of memory on computer either by keeping old images or build cache. To see how much memory this is taking up: `docker system df`. To prune all memory run: `docker system prune -af --volumes`; locally this could take 25 GB of memory
 2. Read through `AGENTS.md`; gives a sense for how I use docker
 
 ## Build On Computer Cluster

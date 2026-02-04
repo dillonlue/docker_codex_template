@@ -6,14 +6,13 @@ argument-hint: DIR="<target directory>"
 Follow this workflow to save changes in a particular directory:
 
 1) Ensure you are in the repo root.
-2) If $DIR is missing, ask the user to provide the target directory or a numeric prefix (e.g. `99` or `99_example_MNIST`).
-3) If $DIR is digits only, resolve it to a directory in the repo root matching `DIR_*`:
+2) If $DIR is digits only, resolve it to a directory in the repo root matching `DIR_*`:
    - If exactly one match exists, set {DIR_TO_SAVE} to that directory name.
    - If no matches or multiple matches exist, ask the user to clarify the target and stop.
-4) Verify the directory exists with `ls -a {DIR_TO_SAVE}`.
-5) Inspect changes scoped to {DIR_TO_SAVE}: `git status --porcelain=v1 -- {DIR_TO_SAVE}` and `git diff --stat -- {DIR_TO_SAVE}`.
-6) If there are no changes in {DIR_TO_SAVE}, report that and stop.
-7) Scan changed files in {DIR_TO_SAVE} for likely ignore candidates:
+3) Verify the directory exists with `ls -a {DIR_TO_SAVE}`.
+4) Inspect changes scoped to {DIR_TO_SAVE}: `git status --porcelain=v1 -- {DIR_TO_SAVE}` and `git diff --stat -- {DIR_TO_SAVE}`.
+5) If there are no changes in {DIR_TO_SAVE}, report that and stop.
+6) Scan changed files in {DIR_TO_SAVE} for likely ignore candidates:
    - Repeated file patterns (>10 of the same extension or basename pattern).
    - Large files (>100MB).
    - Never add `.gitignore` rules for `.py` files.
