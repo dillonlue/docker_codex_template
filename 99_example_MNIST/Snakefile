@@ -1,0 +1,178 @@
+import os
+
+BASE_DIR = workflow.basedir
+RAW_DIR = os.path.join(BASE_DIR, "raw_data")
+OUT_DIR = os.path.join(BASE_DIR, "output")
+SCRIPTS_DIR = os.path.join(BASE_DIR, "scripts")
+
+rule all:
+    input:
+        f"{OUT_DIR}/99_index.html"
+
+##################################################################################################
+################################## Train  ########################################################
+##################################################################################################
+
+rule r01_download:
+    output:
+        X_train=f"{RAW_DIR}/01_X_train.npy",
+        y_train=f"{RAW_DIR}/01_y_train.npy",
+        X_val=f"{RAW_DIR}/01_X_val.npy",
+        y_val=f"{RAW_DIR}/01_y_val.npy",
+        X_test=f"{RAW_DIR}/01_X_test.npy",
+        y_test=f"{RAW_DIR}/01_y_test.npy",
+    params:
+        cache_dir=f"{RAW_DIR}/01_mnist_cache"
+    shell:
+        """
+        python {SCRIPTS_DIR}/01_download.py \
+          --cache-dir {params.cache_dir} \
+          --x-train {output.X_train} --y-train {output.y_train} \
+          --x-val {output.X_val} --y-val {output.y_val} \
+          --x-test {output.X_test} --y-test {output.y_test}
+        """
+
+rule r02_train_model:
+    input:
+        X_train=f"{RAW_DIR}/01_X_train.npy",
+        y_train=f"{RAW_DIR}/01_y_train.npy",
+        X_val=f"{RAW_DIR}/01_X_val.npy",
+        y_val=f"{RAW_DIR}/01_y_val.npy",
+    output:
+        model=f"{OUT_DIR}/02_model.npz",
+        metrics=f"{OUT_DIR}/02_val_metrics.tsv",
+    params:
+        epochs=5,
+        lr=0.2,
+        batch_size=128,
+        max_train=20000,
+        seed=42,
+    shell:
+        """
+        python {SCRIPTS_DIR}/02_train_model.py \
+          --x-train {input.X_train} --y-train {input.y_train} \
+          --x-val {input.X_val} --y-val {input.y_val} \
+          --model {output.model} --metrics {output.metrics} \
+          --epochs {params.epochs} --lr {params.lr} \
+          --batch-size {params.batch_size} --max-train {params.max_train} \
+          --seed {params.seed}
+        """
+
+rule r03_plot_epoch_vs_accuracy:
+    input:
+        metrics=f"{OUT_DIR}/02_val_metrics.tsv",
+    output:
+        html=f"{OUT_DIR}/03_epoch_vs_accuracy.html",
+    shell:
+        """
+        python {SCRIPTS_DIR}/03_plot_epoch_vs_accuracy.py \
+          --metrics {input.metrics} --html {output.html}
+        """
+
+rule r04_show_images:
+    input:
+        model=f"{OUT_DIR}/02_model.npz",
+        X_test=f"{RAW_DIR}/01_X_test.npy",
+        y_test=f"{RAW_DIR}/01_y_test.npy",
+    output:
+        images_dir=directory(f"{OUT_DIR}/04_test_images"),
+        acc=f"{OUT_DIR}/04_test_accuracy.txt",
+    params:
+        seed=7,
+        n_images=25,
+    shell:
+        """
+        python {SCRIPTS_DIR}/04_show_images.py \
+          --model {input.model} --x-test {input.X_test} --y-test {input.y_test} \
+          --out-dir {output.images_dir} --acc {output.acc} \
+          --seed {params.seed} --n-images {params.n_images}
+        """
+
+rule r05_final_html:
+    input:
+        plot_html=f"{OUT_DIR}/03_epoch_vs_accuracy.html",
+        test_images_dir=f"{OUT_DIR}/04_test_images",
+        acc=f"{OUT_DIR}/04_test_accuracy.txt",
+    output:
+        html=f"{OUT_DIR}/05_final_report.html",
+    params:
+        out_dir=OUT_DIR,
+    shell:
+        """
+        python {SCRIPTS_DIR}/05_final_html.py \
+          --out-dir {params.out_dir} --acc {input.acc} \
+          --plot-html {input.plot_html} \
+          --html {output.html}
+        """
+
+##################################################################################################
+################################## Jackstraw #####################################################
+##################################################################################################
+
+rule r10_export_train_tsv:
+    input:
+        X_train=f"{RAW_DIR}/01_X_train.npy",
+    output:
+        tsv=f"{OUT_DIR}/10_mnist_train.tsv",
+    params:
+        max_samples=5000,
+        seed=123,
+    shell:
+        """
+        python {SCRIPTS_DIR}/10_export_train_tsv.py \
+          --x-train {input.X_train} --out-tsv {output.tsv} \
+          --max-samples {params.max_samples} --seed {params.seed}
+        """
+
+rule r11_jackstraw:
+    input:
+        tsv=f"{OUT_DIR}/10_mnist_train.tsv",
+    output:
+        summary=f"{OUT_DIR}/11_jackstraw_summary.tsv",
+        pvals=f"{OUT_DIR}/11_jackstraw_pvals.tsv",
+    params:
+        num_pcs=10,
+        jackstraw_s=100,
+        jackstraw_b=200,
+        seed=123,
+    conda:
+        f"{BASE_DIR}/envs/r_jackstraw.yaml"
+    shell:
+        """
+        Rscript {SCRIPTS_DIR}/11_jackstraw.R \
+          --train-tsv {input.tsv} \
+          --out-summary {output.summary} --out-pvals {output.pvals} \
+          --num-pcs {params.num_pcs} \
+          --jackstraw-s {params.jackstraw_s} --jackstraw-b {params.jackstraw_b} \
+          --seed {params.seed}
+        """
+
+rule r12_preprocess_jackstraw:
+    input:
+        summary=f"{OUT_DIR}/11_jackstraw_summary.tsv",
+        pvals=f"{OUT_DIR}/11_jackstraw_pvals.tsv",
+    output:
+        html=f"{OUT_DIR}/12_jackstraw_report.html",
+    shell:
+        """
+        python {SCRIPTS_DIR}/12_jackstraw_html.py \
+          --summary-tsv {input.summary} --pvals-tsv {input.pvals} \
+          --html {output.html}
+        """
+
+#####################################################################################################
+################################## final_report #####################################################
+#####################################################################################################
+
+rule r99_html:
+    input:
+        mnist=f"{OUT_DIR}/05_final_report.html",
+        jackstraw=f"{OUT_DIR}/12_jackstraw_report.html",
+    output:
+        html=f"{OUT_DIR}/main.html",
+    shell:
+        """
+        python {SCRIPTS_DIR}/99_index_html.py \
+          --mnist-html {input.mnist} --jackstraw-html {input.jackstraw} \
+          --html {output.html}
+        """
