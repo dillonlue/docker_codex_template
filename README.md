@@ -32,7 +32,7 @@ Most shared compute clusters (like our argo server) do not allow the Docker daem
 3. On cluster git clone the repo
 4. Update `apptai/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
-6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access.
+6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access. To keep this open I open `ssh argo` then I use iterm2 to open a tmux session
 7. SSH to the server and `cd` into the repo that was cloned
 8. On the cluster, build the SIF and start a shell/command with `./apptainer/03_cluster_build.sh`
 9. To get into the container run: `./apptainer/04_cluster_run.sh`.
