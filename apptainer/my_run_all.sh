@@ -20,4 +20,3 @@ ssh "${REMOTE_HOST}" "mkdir -p \"${REMOTE_REPO_DIR}/apptainer\""
 scp "${TAR_PATH}" "${REMOTE_HOST}:${REMOTE_TAR_PATH}"
 
 ssh "${REMOTE_HOST}" "cd \"${REMOTE_REPO_DIR}\" && ./apptainer/03_cluster_build.sh \"${REMOTE_TAR_PATH}\" \"${REMOTE_SIF_PATH}\""
-ssh "${REMOTE_HOST}" "cd \"${REMOTE_REPO_DIR}\" && ./apptainer/04_cluster_run.sh \"${REMOTE_SIF_PATH}\""
