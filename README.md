@@ -28,7 +28,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 ## Build On Computer Cluster
 Most shared compute clusters (like our argo server) do not allow the Docker daemon for security, so the supported container runtime is Apptainer.
 1. Install VScode on cluster: look at this for how to do that: https://github.com/pritykinlab/pritykinlab_onboarding
-2. Install codex CLI on the cluster (https://developers.openai.com/codex/cli/); npm via conda then codex via npm; copy ~/.codex/auth.json from local computer over instead of logging in from the server
+2. Install codex CLI on the cluster (https://developers.openai.com/codex/cli/); npm via conda then codex via npm; run codex in the conda environment that npm installed in; copy ~/.codex/auth.json from local computer over instead of logging in from the server
 3. On cluster git clone the repo
 4. Update `apptai/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
