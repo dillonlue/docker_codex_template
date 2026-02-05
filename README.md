@@ -16,8 +16,8 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 5. Install codex CLI (using the terminal): https://developers.openai.com/codex/cli/
 6. run codex in terminal and sign in
 7. Type `codex` in terminal to make sure it is working
-8. run `build.sh` which build container like a VM with all your packages; every time packages are added have to rerun this
-9. Go into the container by using `shell.sh`; You can run multiple of these to get multiple terminals [I usually have at least one for codex and one for myself]: Should see something like this: `root@078025215da0:/repo#`
+8. run `build.sh` which build container like a VM with all your packages; every time packages are added have to rerun this [you run this once or whenever Dockerfiles/requirements are updated]
+9. Go into the container by using `shell.sh`; You can run multiple of these to get multiple terminals [I usually have at least one for codex and one for myself]: Should see something like this: `root@078025215da0:/repo#` [this is the main command to run getting into project]
 10. Inside prompts are a bunch of slash commands. Copy prompts into `~/.codex/prompts/`
 11. To see how everything is working run `99_MNIST`; Open htmls using "Live Server" extension in VSCode; Right click on the html that you want to run and click "Open with Live Server"
 
@@ -32,7 +32,7 @@ Most shared compute clusters (like our argo server) do not allow the Docker daem
 3. On cluster git clone the repo
 4. Update `apptai/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
-6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access. To keep this open I open `ssh argo` then I use iterm2 to open a tmux session
+6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access. To keep this open I open `ssh argo` then I use iterm2 to open a tmux session [Only the nodes that are requested through slurm have Apptainer access; the head node does not have Apptainer]
 7. SSH to the server and `cd` into the repo that was cloned
 8. On the cluster, build the SIF and start a shell/command with `./apptainer/03_cluster_build.sh`
 9. To get into the container run: `./apptainer/04_cluster_run.sh`.
