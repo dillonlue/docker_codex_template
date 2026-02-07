@@ -10,3 +10,4 @@ services:
       - ./:/repo
       - ${HOME}/.codex:/root/.codex
       - ${HOME}/.ssh:/root/.ssh
+      - ${HOME}/.gitconfig:/root/.gitconfig
