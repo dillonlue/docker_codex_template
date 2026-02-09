@@ -12,7 +12,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 1. git clone the repo
 2. set up your Git SSH key so pushes don't require typing a password
 3. Download VScode, open the cloned folder
-4. Install docker (should be a desktop app)
+4. Install docker (should be a desktop app) => open docker desktop [click on the icon]
 5. Install codex CLI (using the terminal): https://developers.openai.com/codex/cli/
 6. run codex in terminal and sign in
 7. Type `codex` in terminal to make sure it is working
