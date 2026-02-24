@@ -20,8 +20,8 @@ Directory and Script Format
 - Rules should be sequential and match scripts/outputs (e.g., `r01_*` uses `scripts/01_*` and writes `output/01_*`)
 - Inside this directory should be folders: `raw_data`, `scripts`, `debugger`, `output`, `envs`
 - `raw_data` should only be populated by explicit download rules (not by `r01_*` by default).
-- Most subanalysis can be run without the use of conda. For example, to run only the MNIST subanalysis HTML (e.g., `05_train.html`) use: `snakemake -c 1 -s 99_example_MNIST/Snakefile output/05_train.html`
-- When snakemake is using conda enviornemtns, run snakemake using this command `PATH=/usr/local/bin:/opt/conda/bin:$PATH snakemake -c 1 -s 99_example_MNIST/Snakefile --use-conda`
+- Most subanalysis can be run without the use of conda. For example, to run only the MNIST subanalysis HTML (e.g., `05_train.html`) use: `snakemake -c 50 -s 99_example_MNIST/Snakefile output/05_train.html`
+- When snakemake is using conda enviornemtns, run snakemake using this command `PATH=/usr/local/bin:/opt/conda/bin:$PATH snakemake -c 50 -s 99_example_MNIST/Snakefile --use-conda`
 - Only use conda when there are specialized packages such as R and jackstraw in the example; more general purpose packages should be downloaded by docker; tell me you need to download something that might seem general
 - Each subanalysis ends with an HTML summary file describing that subanalysis (e.g., `05_train.html`, `12_jackstraw_report.html`).
 - Always have `r99_html` which has links to each of the sub analysis and is named `main.html` this is the only output that does not also have numbers at the front
