@@ -2,7 +2,7 @@
 """Lightweight static file server for this repo.
 
 Usage:
-  python local_server/html_server.py --port 8000 --dir /repo
+  python local_server/html_server.py --port 8000
 
 By default, this server only exposes:
   - project_journal/
@@ -136,26 +136,25 @@ class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve static files from a directory.")
-    parser.add_argument("--dir", default=".", help="Directory to serve")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind")
     args = parser.parse_args()
 
-    root = Path(args.dir).resolve()
+    host = "127.0.0.1"
+    root = Path(".").resolve()
     if not root.exists():
         raise SystemExit(f"Directory does not exist: {root}")
 
     handler = FilteredHTTPRequestHandler
     handler.directory = str(root)
 
-    server = ThreadingHTTPServer((args.host, args.port), handler)
-    print(f"Serving {root} on http://{args.host}:{args.port}")
+    server = ThreadingHTTPServer((host, args.port), handler)
+    print(f"Serving {root} on http://{host}:{args.port}")
 
     local_port = args.port
     ssh_user = getpass.getuser()
     raw_host = socket.gethostname() or socket.getfqdn() or "<your-server-host>"
     ssh_host = raw_host.split(".", 1)[0]
-    remote_host = args.host
+    remote_host = host
     if remote_host in {"0.0.0.0", "::"}:
         remote_host = "127.0.0.1"
 
