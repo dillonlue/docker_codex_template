@@ -422,15 +422,20 @@ class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
         const viewport = page.getViewport({{ scale: state.zoom }});
         const width = Math.ceil(viewport.width);
         const height = Math.ceil(viewport.height);
-        canvas.width = width;
-        canvas.height = height;
+        const outputScale = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.floor(width * outputScale));
+        canvas.height = Math.max(1, Math.floor(height * outputScale));
         canvas.style.width = width + "px";
         canvas.style.height = height + "px";
         pageWrap.style.width = width + "px";
         pageWrap.style.height = height + "px";
         textLayer.style.width = width + "px";
         textLayer.style.height = height + "px";
-        await page.render({{ canvasContext: ctx, viewport }}).promise;
+        await page.render({{
+          canvasContext: ctx,
+          viewport,
+          transform: outputScale === 1 ? null : [outputScale, 0, 0, outputScale, 0, 0]
+        }}).promise;
         textLayer.innerHTML = "";
         let textContent = null;
         try {{
