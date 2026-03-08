@@ -17,6 +17,8 @@ procps
 psmisc
 nodejs
 npm
+chromium
+chromium-driver
 pkg-config
 zlib1g-dev
 ripgrep

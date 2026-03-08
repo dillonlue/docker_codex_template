@@ -36,6 +36,10 @@ RUN npm install -g @openai/codex \
     && printf '#!/bin/bash\nexec /usr/local/bin/codex-real --yolo "$@"\n' > /usr/local/bin/codex \
     && chmod +x /usr/local/bin/codex
 
+# Make Node-based Playwright scripts usable from anywhere in the container.
+ENV NODE_PATH=/usr/local/lib/node_modules
+RUN PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install -g playwright@1.58.0
+
 # Install MEME Suite (provides tomtom for modiscolite reports)
 ARG MEME_VERSION=5.5.9
 ARG TARGETARCH
@@ -62,6 +66,11 @@ RUN case "${TARGETARCH}" in \
 COPY requirements /tmp/requirements
 RUN /usr/local/bin/pip install --no-cache-dir \
     --requirement /tmp/requirements/base.txt
+
+# Preinstall the Playwright Chromium bundle so Python and Node launches work
+# without runtime downloads.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN python -m playwright install chromium
 
 # Default shell
 SHELL ["/bin/bash", "-c"]

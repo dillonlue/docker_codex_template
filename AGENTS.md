@@ -5,6 +5,7 @@
 - If things aren't running fast enough, increase the timeout to maximum.
 - If you edit `project_journal/main.tex`, run `project_journal/compile.sh` before finishing so the PDF stays in sync.
 - `papers` directory contains some papers that we might reference
+- Chromium and Playwright are available in this container, so you can open local HTML files and interact with interactive plots when needed.
 
 If I ask anything about a particular about a paper please reference `papers` directory; don't ever go on the internet to access a paper
 
