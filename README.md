@@ -27,7 +27,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 
 ## Local HTML Server
 Run `python local_server/html_server.py --port 8000` from the repo root to serve the allowed HTML/PDF/DOT outputs over localhost only.
-The server uses browser-native HTTP auth with the shared password `pritykinlab`; the username field is ignored.
+The server shows a password-only login page with the shared password `pritykinlab`.
 On a remote machine, use the printed SSH tunnel command and then open `http://127.0.0.1:8000` locally.
 
 ## Build On Computer Cluster

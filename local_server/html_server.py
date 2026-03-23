@@ -12,52 +12,114 @@ By default, this server only exposes:
 from __future__ import annotations
 
 import argparse
-import base64
-import binascii
 import getpass
 import hmac
 import html
 import json
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from http.cookies import CookieError, SimpleCookie
 import io
 import os
 from pathlib import Path
 import re
+import secrets
 import socket
-from urllib.parse import parse_qs, unquote, urlencode, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlencode, urlparse
 
 
 ALLOWED_ROOT_DIRS = {"project_journal", "figure_aggregator"}
 ANALYSIS_DIR_RE = re.compile(r"^\d{2,}_.+")
 PDF_VIEWER_PATH = "/__pdf_viewer"
 DOT_VIEWER_PATH = "/__dot_viewer"
+LOGIN_PATH = "/__login"
 
 
 class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
     auth_password = "pritykinlab"
-
-    def _send_auth_required(self) -> None:
-        self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="local_server"')
-        self.send_header("Content-type", "text/plain; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(b"Authentication required.\n")
+    session_cookie_name = "local_server_session"
+    session_token = ""
 
     def _is_authorized(self) -> bool:
-        auth_header = self.headers.get("Authorization")
-        if not auth_header:
+        cookie_header = self.headers.get("Cookie")
+        if not cookie_header:
             return False
-        scheme, _, encoded = auth_header.partition(" ")
-        if scheme.lower() != "basic" or not encoded:
-            return False
+        cookie = SimpleCookie()
         try:
-            decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
-        except (binascii.Error, UnicodeDecodeError):
+            cookie.load(cookie_header)
+        except CookieError:
             return False
-        _username, _, password = decoded.partition(":")
-        if not _:
+        morsel = cookie.get(self.session_cookie_name)
+        if morsel is None:
             return False
-        return hmac.compare_digest(password, self.auth_password)
+        return hmac.compare_digest(morsel.value, self.session_token)
+
+    def _redirect_to_login(self) -> None:
+        target = f"{LOGIN_PATH}?next={quote(self.path or '/', safe='/?:=&')}"
+        self.send_response(303)
+        self.send_header("Location", target)
+        self.end_headers()
+
+    def _login_next_path(self) -> str:
+        next_path = parse_qs(urlparse(self.path).query).get("next", ["/"])[0]
+        if not next_path.startswith("/"):
+            return "/"
+        return next_path
+
+    def _serve_login_page(self, error: str = ""):
+        next_path = self._login_next_path()
+        error_html = (
+            f"<p style='color:#b00020'>{html.escape(error)}</p>" if error else ""
+        )
+        lines = [
+            "<!DOCTYPE html>",
+            "<html><head>",
+            "<meta charset='utf-8'>",
+            "<title>local_server login</title>",
+            "</head><body>",
+            "<h1>local_server</h1>",
+            "<p>Enter the password to continue.</p>",
+            error_html,
+            f"<form method='post' action='{LOGIN_PATH}'>",
+            f"<input type='hidden' name='next' value='{html.escape(next_path, quote=True)}'>",
+            "<label>Password <input type='password' name='password' autofocus></label>",
+            "<button type='submit'>Open</button>",
+            "</form>",
+            "</body></html>",
+        ]
+        encoded = "\n".join(line for line in lines if line).encode("utf-8")
+        f = io.BytesIO()
+        f.write(encoded)
+        f.seek(0)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(encoded)))
+        self.end_headers()
+        return f
+
+    def do_POST(self):
+        if urlparse(self.path).path != LOGIN_PATH:
+            self.send_error(404, "Not found")
+            return
+        content_length = int(self.headers.get("Content-Length", "0"))
+        body = self.rfile.read(content_length).decode("utf-8", errors="replace")
+        form = parse_qs(body)
+        password = form.get("password", [""])[0]
+        next_path = form.get("next", ["/"])[0]
+        if not next_path.startswith("/"):
+            next_path = "/"
+        if not hmac.compare_digest(password, self.auth_password):
+            response = self._serve_login_page("Incorrect password.")
+            if response is not None:
+                self.copyfile(response, self.wfile)
+                response.close()
+            return
+        self.send_response(303)
+        self.send_header(
+            "Set-Cookie",
+            f"{self.session_cookie_name}={self.session_token}; Path=/; HttpOnly; SameSite=Lax",
+        )
+        self.send_header("Location", next_path)
+        self.end_headers()
 
     def _rel_parts(self) -> list[str] | None:
         url_path = urlparse(self.path).path
@@ -105,8 +167,11 @@ class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
         return False
 
     def send_head(self):
+        if urlparse(self.path).path == LOGIN_PATH:
+            return self._serve_login_page()
+
         if not self._is_authorized():
-            self._send_auth_required()
+            self._redirect_to_login()
             return None
 
         parsed = urlparse(self.path)
@@ -2930,12 +2995,12 @@ def main() -> None:
 
     handler = FilteredHTTPRequestHandler
     handler.directory = str(root)
+    handler.session_token = secrets.token_hex(32)
 
     server = ThreadingHTTPServer((host, args.port), handler)
     print(f"Serving {root} on http://{host}:{args.port}")
-    print("HTTP auth is enabled.")
+    print("Password-only login is enabled.")
     print(f"Password: {handler.auth_password}")
-    print("The username field is ignored by the server.")
 
     local_port = args.port
     ssh_user = getpass.getuser()
