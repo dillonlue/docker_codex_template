@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run a bash shell inside an Apptainer SIF.
-# Usage: ./apptainer/04_cluster_run.sh [sif_path]
+# Run a bash shell or command inside an Apptainer SIF.
+# Usage: ./apptainer/04_cluster_run.sh [sif_path] [command ...]
 # Example: ./apptainer/04_cluster_run.sh ./apptainer/project_name.sif
+# Example: ./apptainer/04_cluster_run.sh ./apptainer/project_name.sif pwd
 # Assumes you run this from the project root.
 
 if [ ! -f ./set_project_env.sh ] || [ ! -d ./apptainer ]; then
@@ -23,6 +24,9 @@ HOST_GITCONFIG="${HOME}/.gitconfig"
 CONTAINER_GITCONFIG="${CONTAINER_HOME}/.gitconfig"
 
 SIF_PATH="${1:-${SIF_PATH:-./apptainer/${PROJECT_NAME}.sif}}"
+if [ "$#" -gt 0 ]; then
+  shift
+fi
 USE_NV="${USE_NV:-auto}"
 
 if [ ! -f "${SIF_PATH}" ]; then
@@ -31,7 +35,6 @@ if [ ! -f "${SIF_PATH}" ]; then
   exit 1
 fi
 
-echo "Running: bash"
 mkdir -p "${HOST_APPTAINER_HOME}"
 BIND_ARGS=(
   --bind "${HOST_APPTAINER_HOME}:${CONTAINER_HOME}"
@@ -56,8 +59,21 @@ if [ -f "${HOST_GITCONFIG}" ]; then
 else
   echo "Warning: ${HOST_GITCONFIG} not found; skipping gitconfig bind."
 fi
-apptainer exec --cleanenv --no-home --home "${CONTAINER_HOME}" \
-  "${NV_ARGS[@]}" \
-  "${BIND_ARGS[@]}" \
-  "${SIF_PATH}" \
-  bash --noprofile --norc -c "mkdir -p ${CONTAINER_HOME} && cd /repo && exec bash --noprofile --norc"
+
+if [ "$#" -gt 0 ]; then
+  echo "Running inside container: $*"
+  apptainer exec --cleanenv --no-home --home "${CONTAINER_HOME}" \
+    "${NV_ARGS[@]}" \
+    "${BIND_ARGS[@]}" \
+    "${SIF_PATH}" \
+    bash --noprofile --norc -lc 'mkdir -p "$1" && cd /repo && shift && exec "$@"' \
+    bash "${CONTAINER_HOME}" "$@"
+else
+  echo "Running: bash"
+  apptainer exec --cleanenv --no-home --home "${CONTAINER_HOME}" \
+    "${NV_ARGS[@]}" \
+    "${BIND_ARGS[@]}" \
+    "${SIF_PATH}" \
+    bash --noprofile --norc -lc 'mkdir -p "$1" && cd /repo && exec bash --noprofile --norc' \
+    bash "${CONTAINER_HOME}"
+fi

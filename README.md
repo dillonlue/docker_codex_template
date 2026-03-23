@@ -25,6 +25,11 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 1. Docker can use lots of memory on computer either by keeping old images or build cache. To see how much memory this is taking up: `docker system df`. To prune all memory run: `docker system prune -af --volumes`; locally this could take 25 GB of memory
 2. Read through `AGENTS.md`; gives a sense for how I use docker
 
+## Local HTML Server
+Run `python local_server/html_server.py --port 8000` from the repo root to serve the allowed HTML/PDF/DOT outputs over localhost only.
+The server uses browser-native HTTP auth with the shared password `pritykinlab`; the username field is ignored.
+On a remote machine, use the printed SSH tunnel command and then open `http://127.0.0.1:8000` locally.
+
 ## Build On Computer Cluster
 Most shared compute clusters (like our argo server) do not allow the Docker daemon for security, so the supported container runtime is Apptainer.
 1. Install VScode on cluster: look at this for how to do that: https://github.com/pritykinlab/pritykinlab_onboarding
@@ -33,11 +38,13 @@ Most shared compute clusters (like our argo server) do not allow the Docker daem
 4. Update `apptainer/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
 6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access. To keep this open I open `ssh argo` then I use iterm2 to open a tmux session [Only the nodes that are requested through slurm have Apptainer access; the head node does not have Apptainer]
-7. SSH to the server and `cd` into the repo that was cloned
-8. On the cluster, build the SIF and start a shell/command with `./apptainer/03_cluster_build.sh`
-9. To get into the container run: `./apptainer/04_cluster_run.sh`.
-10. On server, tell codex to run everything in `99_MNIST`
-12. On server, open html files using the "Live Server" extension
+7. If you already have a Slurm job running, you can stay on the login node and attach to it with `srun --jobid=$(squeue -u dl4257 -h -o "%A" | sort -n | tail -n1) --overlap --pty bash -l`
+8. SSH to the server and `cd` into the repo that was cloned
+9. On the cluster, build the SIF with `./apptainer/03_cluster_build.sh`
+10. To get into the container run `./apptainer/04_cluster_run.sh`; to run a one-off command use `./apptainer/04_cluster_run.sh ./apptainer/<project>.sif <command> [args ...]`
+11. From your local machine, `./apptainer/my_run_all.sh` now copies the tarball to `argo`, finds the most recently created active Slurm job for `dl4257`, enters that allocation, builds the SIF there, and then launches `./apptainer/04_cluster_run.sh`
+12. On server, tell codex to run everything in `99_MNIST`
+13. On server, open html files using the "Live Server" extension
 
 ## Things to do
 1. Connect VSCode to container

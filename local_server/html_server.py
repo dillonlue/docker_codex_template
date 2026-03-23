@@ -12,7 +12,10 @@ By default, this server only exposes:
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import getpass
+import hmac
 import html
 import json
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
@@ -31,6 +34,31 @@ DOT_VIEWER_PATH = "/__dot_viewer"
 
 
 class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
+    auth_password = "pritykinlab"
+
+    def _send_auth_required(self) -> None:
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", 'Basic realm="local_server"')
+        self.send_header("Content-type", "text/plain; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(b"Authentication required.\n")
+
+    def _is_authorized(self) -> bool:
+        auth_header = self.headers.get("Authorization")
+        if not auth_header:
+            return False
+        scheme, _, encoded = auth_header.partition(" ")
+        if scheme.lower() != "basic" or not encoded:
+            return False
+        try:
+            decoded = base64.b64decode(encoded, validate=True).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError):
+            return False
+        _username, _, password = decoded.partition(":")
+        if not _:
+            return False
+        return hmac.compare_digest(password, self.auth_password)
+
     def _rel_parts(self) -> list[str] | None:
         url_path = urlparse(self.path).path
         return self._parts_from_url_path(url_path)
@@ -77,6 +105,10 @@ class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
         return False
 
     def send_head(self):
+        if not self._is_authorized():
+            self._send_auth_required()
+            return None
+
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
@@ -2901,6 +2933,9 @@ def main() -> None:
 
     server = ThreadingHTTPServer((host, args.port), handler)
     print(f"Serving {root} on http://{host}:{args.port}")
+    print("HTTP auth is enabled.")
+    print(f"Password: {handler.auth_password}")
+    print("The username field is ignored by the server.")
 
     local_port = args.port
     ssh_user = getpass.getuser()
