@@ -26,9 +26,10 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 2. Read through `AGENTS.md`; gives a sense for how I use docker
 
 ## Local HTML Server
-Run `python local_server/html_server.py --port 8000` from the repo root to serve the allowed HTML/PDF/DOT outputs over localhost only.
+Run `python local_server/html_server.py --port 8890` from the repo root to serve the allowed HTML/PDF/DOT outputs.
 The server shows a password-only login page with the shared password `pritykinlab`.
-On a remote machine, use the printed SSH tunnel command and then open `http://127.0.0.1:8000` locally.
+Inside a Slurm allocation it binds on the compute node hostname and prints the local-machine tunnel command in the form `ssh -N -f -L 8890:<node>:8890 <user>@argo.princeton.edu`.
+Then open `http://127.0.0.1:8890` locally.
 
 ## Build On Computer Cluster
 Most shared compute clusters (like our argo server) do not allow the Docker daemon for security, so the supported container runtime is Apptainer.
