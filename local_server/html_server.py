@@ -32,6 +32,7 @@ ANALYSIS_DIR_RE = re.compile(r"^\d{2,}_.+")
 PDF_VIEWER_PATH = "/__pdf_viewer"
 DOT_VIEWER_PATH = "/__dot_viewer"
 LOGIN_PATH = "/__login"
+ARGO_COMPUTE_NODE_RE = re.compile(r"^argo-\d+$")
 
 
 class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
@@ -2991,8 +2992,10 @@ def main() -> None:
     raw_host = socket.gethostname() or socket.getfqdn() or "<your-server-host>"
     node_host = os.environ.get("SLURMD_NODENAME") or raw_host.split(".", 1)[0]
     slurm_job_id = os.environ.get("SLURM_JOB_ID")
-    host = "0.0.0.0" if slurm_job_id else "127.0.0.1"
-    display_host = node_host if slurm_job_id else host
+    on_argo_compute_node = bool(ARGO_COMPUTE_NODE_RE.fullmatch(node_host))
+    use_cluster_tunnel = bool(slurm_job_id) or on_argo_compute_node
+    host = "0.0.0.0" if use_cluster_tunnel else "127.0.0.1"
+    display_host = node_host if use_cluster_tunnel else host
     root = Path(".").resolve()
     if not root.exists():
         raise SystemExit(f"Directory does not exist: {root}")
@@ -3011,14 +3014,21 @@ def main() -> None:
 
     print("")
     print("From your local computer, run this to forward the port:")
-    if slurm_job_id:
+    if use_cluster_tunnel:
         cluster_host = os.environ.get("LOCAL_SERVER_CLUSTER_HOST", "argo.princeton.edu")
-        print(f"  ssh -N -f -L {local_port}:{node_host}:{args.port} {ssh_user}@{cluster_host}")
-        print("")
-        print("To reconnect to this allocation later, run:")
-        print(f"  srun --jobid {slurm_job_id} --overlap --pty bash -l")
+        print(
+            f"  lsof -ti:{local_port} | xargs kill; "
+            f"ssh -N -f -L {local_port}:{node_host}:{args.port} {ssh_user}@{cluster_host}"
+        )
+        if slurm_job_id:
+            print("")
+            print("To reconnect to this allocation later, run:")
+            print(f"  srun --jobid {slurm_job_id} --overlap --pty bash -l")
     else:
-        print(f"  ssh -N -L {local_port}:127.0.0.1:{args.port} {ssh_user}@{node_host}")
+        print(
+            f"  lsof -ti:{local_port} | xargs kill; "
+            f"ssh -N -L {local_port}:127.0.0.1:{args.port} {ssh_user}@{node_host}"
+        )
     print(f"Then open: http://127.0.0.1:{local_port}")
     try:
         server.serve_forever()
