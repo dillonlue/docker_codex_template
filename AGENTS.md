@@ -2,14 +2,17 @@
 
 - At the start of a new conversation, check whether a pull is needed. If a pull can be done without a merge conflict, run it before starting work.
 - Never install anything directly. If something needs to be installed, say what and ask for permission; only then edit Dockerfile, docker-compose, apt-packages, or requirements files for installations.
+- Always set and use an explicit seed for any stochastic analysis, simulation, or randomized script so results are reproducible.
 - If things aren't running fast enough, increase the timeout to maximum.
 - If you edit `project_journal/main.tex`, run `project_journal/compile.sh` before finishing so the PDF stays in sync.
 - `papers` directory contains some papers that we might reference
 - Chromium and Playwright are available in this container, so you can open local HTML files and interact with interactive plots when needed.
 
-If I ask anything about a particular about a paper please reference `papers` directory; don't ever go on the internet to access a paper
+If I ask anything about a particular about a paper please reference `papers` directory
 
 If you see a bunch of files that have been changed but you haven't touched that is ok. Don't warn me about this.
+
+You shiould not do much defensive programming especially checking if file exists or not. Only add if statements once you run into the error.
 
 Directory and Script Format
 - Every new analysis should start with {number}_{description}; An example of an analysis is `99_example_MNIST` for the example directory structure
