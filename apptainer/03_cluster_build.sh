@@ -8,7 +8,7 @@ set -euo pipefail
 
 if [ ! -f ./set_project_env.sh ] || [ ! -d ./apptainer ]; then
   echo "Error: run from the repo root (directory containing ./set_project_env.sh and ./apptainer)." >&2
-  echo "Example (cluster): cd /Genomics/pritykinlab/dillon/docker_codex_template" >&2
+  echo "Example (cluster): cd /Genomics/pritykinlab/dillon/docker_codex_template_v2" >&2
   exit 1
 fi
 

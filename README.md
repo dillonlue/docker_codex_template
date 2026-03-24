@@ -3,7 +3,7 @@ This repo contains the container and related setup for running Codex in full-per
 Codex runs in full-permission "yolo" mode inside the container, meaning it can run any command and edit any file within the container. Docker provides the isolation: even with full permissions, it cannot escape the container or access files outside it.
 
 ## Copying this repo
-To start a new project, change `.project_directory_name.txt`; set this to the new repo name that you'd like
+To start a new project, change `.project_directory_name.txt`; set this to the new repo name that you'd like.
 
 ### Other things this container has access to
 1. Latex editor (ask codex to explain code and equations in latex in `project journal`; it should then compile the latex so you can see equations)
@@ -43,7 +43,7 @@ Most shared compute clusters (like our argo server) do not allow the Docker daem
 1. Install VScode on cluster: look at this for how to do that: https://github.com/pritykinlab/pritykinlab_onboarding
 2. Install codex CLI on the cluster (https://developers.openai.com/codex/cli/); npm via conda then codex via npm; run codex in the conda environment that npm installed in; copy ~/.codex/auth.json from local computer over instead of logging in from the server
 3. On cluster git clone the repo
-4. Update `apptainer/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR`.
+4. Update `apptainer/config.sh` with your `APPTAINER_USER`, `APPTAINER_HOST`, and `APPTAINER_REPO_DIR` (for example `/Genomics/pritykinlab/dillon/docker_codex_template_v2`).
 5. Build locally and ship the tarball with `apptainer/01_local_build_tar.sh` then `apptainer/02_local_send.sh`. [right now it's set up to my directory you will have to change this; right now these commands are meant to be run from the root directory outside the container] => goal is to place the tarbell inside apptainer directory on the cluster
 6. On cluster, run `srun --mem=64GB -t 24:00:00 --pty bash -l` to get an interactive node with Apptainer access. To keep this open I open `ssh argo` then I use iterm2 to open a tmux session [Only the nodes that are requested through slurm have Apptainer access; the head node does not have Apptainer]
 7. If you already have a Slurm job running, you can stay on the login node and attach to it with `srun --jobid=$(squeue -u dl4257 -h -o "%A" | sort -n | tail -n1) --overlap --pty bash -l`

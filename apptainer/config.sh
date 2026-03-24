@@ -4,7 +4,7 @@
 
 APPTAINER_USER="dl4257"
 APPTAINER_HOST="argo.princeton.edu"
-APPTAINER_REPO_DIR="/Genomics/pritykinlab/dillon/docker_codex_template"
+APPTAINER_REPO_DIR="/Genomics/pritykinlab/dillon/docker_codex_template_v2"
 
 REMOTE_HOST="${REMOTE_HOST:-${APPTAINER_USER}@${APPTAINER_HOST}}"
 REMOTE_REPO_DIR="${REMOTE_REPO_DIR:-${APPTAINER_REPO_DIR}}"
