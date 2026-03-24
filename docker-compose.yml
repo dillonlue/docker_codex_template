@@ -9,5 +9,7 @@ services:
     volumes:
       - ./:/repo
       - ${HOME}/.codex:/root/.codex
-      - ${HOME}/.ssh:/root/.ssh
+      - ${GITHUB_SSH_KEY_PATH}:/root/.ssh/id_github_codex:ro
+      - ${HOME}/.ssh/known_hosts:/root/.ssh/known_hosts:ro
+      - ./ssh_config.github_only:/root/.ssh/config:ro
       - ${HOME}/.gitconfig:/root/.gitconfig

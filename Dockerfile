@@ -10,6 +10,8 @@ RUN apt-get update && xargs -a /tmp/apt-packages.txt apt-get install -y --no-ins
     && git lfs install --system \
     && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+
 # Set Git identity on shell start, using env overrides or host defaults
 RUN printf '%s\n' \
     'if command -v git >/dev/null 2>&1; then' \

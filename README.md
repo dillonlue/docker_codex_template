@@ -10,7 +10,7 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 
 ## Build Locally
 1. git clone the repo
-2. set up your Git SSH key so pushes don't require typing a password
+2. create a dedicated GitHub-only SSH key; do not reuse a key that can log into your other servers
 3. Download VScode, open the cloned folder
 4. Install docker (should be a desktop app) => open docker desktop [click on the icon]
 5. Install codex CLI (using the terminal): https://developers.openai.com/codex/cli/
@@ -24,6 +24,13 @@ To start a new project, change `.project_directory_name.txt`; set this to the ne
 ### Notes:
 1. Docker can use lots of memory on computer either by keeping old images or build cache. To see how much memory this is taking up: `docker system df`. To prune all memory run: `docker system prune -af --volumes`; locally this could take 25 GB of memory
 2. Read through `AGENTS.md`; gives a sense for how I use docker
+3. This container does not mount the full host `~/.ssh`. It mounts only a dedicated GitHub-only private key, `known_hosts`, and a minimal SSH config that targets `github.com`.
+4. By default `build.sh` expects the key at `~/.ssh/id_github_codex`. If you store it elsewhere, set `GITHUB_SSH_KEY_PATH` before running `build.sh`.
+5. The intended setup is:
+   - create a GitHub-only key such as `~/.ssh/id_github_codex`
+   - add the `.pub` key to GitHub
+   - do not authorize that key on Princeton or other servers
+   - run `bash ./build.sh`
 
 ## Local HTML Server
 Run `python local_server/html_server.py --port 8890` from the repo root to serve the allowed HTML/PDF/DOT outputs.
