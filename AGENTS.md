@@ -1,6 +1,8 @@
 # Agents Guide
 
 - At the start of a new conversation, check whether a pull is needed. If a pull can be done without a merge conflict, run it before starting work.
+- On the cluster, the Apptainer run script binds `/Genomics/pritykinlab/dillon/my_utils` to `/my_utils` read-write. Use `/my_utils` as the shared editable `my_utils` package inside Apptainer.
+- At the start of work in this repo, read `/my_utils/README.md` when `/my_utils` is mounted. It documents the shared utility package contract, available modules, and what belongs there.
 - Never install anything directly. If something needs to be installed, say what and ask for permission; only then edit Dockerfile, docker-compose, apt-packages, or requirements files for installations.
 - Always set and use an explicit seed for any stochastic analysis, simulation, or randomized script so results are reproducible.
 - If things aren't running fast enough, increase the timeout to maximum.

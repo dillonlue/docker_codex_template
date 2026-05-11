@@ -3,6 +3,7 @@ FROM python:3.11-slim
 
 # Work inside /repo where your GitHub repo is mounted
 WORKDIR /repo
+RUN mkdir -p /my_utils
 
 # Install system dependencies listed in apt-packages.txt
 COPY apt-packages.txt /tmp/apt-packages.txt

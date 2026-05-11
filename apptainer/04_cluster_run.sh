@@ -22,6 +22,8 @@ CONTAINER_CODEX_DIR="${CONTAINER_HOME}/.codex"
 HOST_SSH_DIR="${HOME}/.ssh"
 HOST_GITCONFIG="${HOME}/.gitconfig"
 CONTAINER_GITCONFIG="${CONTAINER_HOME}/.gitconfig"
+HOST_MY_UTILS_DIR="${HOST_MY_UTILS_DIR:-/Genomics/pritykinlab/dillon/my_utils}"
+CONTAINER_MY_UTILS_DIR="${CONTAINER_MY_UTILS_DIR:-/my_utils}"
 
 SIF_PATH="${1:-${SIF_PATH:-./apptainer/${PROJECT_NAME}.sif}}"
 if [ "$#" -gt 0 ]; then
@@ -59,6 +61,11 @@ if [ -f "${HOST_GITCONFIG}" ]; then
 else
   echo "Warning: ${HOST_GITCONFIG} not found; skipping gitconfig bind."
 fi
+if [ -d "${HOST_MY_UTILS_DIR}" ]; then
+  BIND_ARGS+=(--bind "${HOST_MY_UTILS_DIR}:${CONTAINER_MY_UTILS_DIR}")
+else
+  echo "Warning: ${HOST_MY_UTILS_DIR} not found; skipping my_utils bind."
+fi
 
 if [ "$#" -gt 0 ]; then
   echo "Running inside container: $*"
@@ -66,14 +73,14 @@ if [ "$#" -gt 0 ]; then
     "${NV_ARGS[@]}" \
     "${BIND_ARGS[@]}" \
     "${SIF_PATH}" \
-    bash --noprofile --norc -lc 'mkdir -p "$1" && cd /repo && shift && exec "$@"' \
-    bash "${CONTAINER_HOME}" "$@"
+    bash --noprofile --norc -lc 'mkdir -p "$1" && export MY_UTILS_DIR="$2" && MY_UTILS_PARENT="$(dirname "$MY_UTILS_DIR")" && export PYTHONPATH="${MY_UTILS_PARENT}${PYTHONPATH:+:${PYTHONPATH}}" && cd /repo && shift 2 && exec "$@"' \
+    bash "${CONTAINER_HOME}" "${CONTAINER_MY_UTILS_DIR}" "$@"
 else
   echo "Running: bash"
   apptainer exec --cleanenv --no-home --home "${CONTAINER_HOME}" \
     "${NV_ARGS[@]}" \
     "${BIND_ARGS[@]}" \
     "${SIF_PATH}" \
-    bash --noprofile --norc -lc 'mkdir -p "$1" && cd /repo && exec bash --noprofile --norc' \
-    bash "${CONTAINER_HOME}"
+    bash --noprofile --norc -lc 'mkdir -p "$1" && export MY_UTILS_DIR="$2" && MY_UTILS_PARENT="$(dirname "$MY_UTILS_DIR")" && export PYTHONPATH="${MY_UTILS_PARENT}${PYTHONPATH:+:${PYTHONPATH}}" && cd /repo && exec bash --noprofile --norc' \
+    bash "${CONTAINER_HOME}" "${CONTAINER_MY_UTILS_DIR}"
 fi
