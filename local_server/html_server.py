@@ -35,6 +35,34 @@ LOGIN_PATH = "/__login"
 ARGO_COMPUTE_NODE_RE = re.compile(r"^argo-\d+$")
 
 
+def _cookie_name_component(value: str) -> str:
+    sanitized = "".join(
+        char if (char.isascii() and (char.isalnum() or char == "_")) else "_"
+        for char in value.strip()
+    ).strip("_")
+    return sanitized or "repo"
+
+
+def _project_cookie_scope(root: Path) -> str:
+    env_scope = os.environ.get("LOCAL_SERVER_COOKIE_SCOPE", "").strip()
+    if env_scope:
+        return env_scope
+
+    project_name_path = root / ".project_directory_name.txt"
+    if project_name_path.is_file():
+        project_name = project_name_path.read_text(encoding="utf-8").strip()
+        if project_name:
+            return project_name
+
+    return root.name
+
+
+def _build_session_cookie_name(root: Path, local_port: str | int) -> str:
+    scope = _cookie_name_component(_project_cookie_scope(root))
+    port = _cookie_name_component(str(local_port))
+    return f"local_server_session_{scope}_{port}"
+
+
 class FilteredHTTPRequestHandler(SimpleHTTPRequestHandler):
     auth_password = "pritykinlab"
     session_cookie_name = "local_server_session"
@@ -2999,9 +3027,11 @@ def main() -> None:
     root = Path(".").resolve()
     if not root.exists():
         raise SystemExit(f"Directory does not exist: {root}")
+    local_port = args.port
 
     handler = FilteredHTTPRequestHandler
     handler.directory = str(root)
+    handler.session_cookie_name = _build_session_cookie_name(root, local_port)
     handler.session_token = secrets.token_hex(32)
 
     server = ThreadingHTTPServer((host, args.port), handler)
@@ -3009,7 +3039,6 @@ def main() -> None:
     print("Password-only login is enabled.")
     print(f"Password: {handler.auth_password}")
 
-    local_port = args.port
     ssh_user = getpass.getuser()
 
     print("")
