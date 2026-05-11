@@ -3,7 +3,6 @@ FROM python:3.11-slim
 
 # Work inside /repo where your GitHub repo is mounted
 WORKDIR /repo
-RUN mkdir -p /my_utils
 
 # Install system dependencies listed in apt-packages.txt
 COPY apt-packages.txt /tmp/apt-packages.txt
@@ -74,6 +73,8 @@ RUN /usr/local/bin/pip install --no-cache-dir \
 # without runtime downloads.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN python -m playwright install chromium
+
+RUN mkdir -p /my_utils
 
 # Default shell
 SHELL ["/bin/bash", "-c"]
